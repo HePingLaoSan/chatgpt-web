@@ -88,6 +88,15 @@ let api: ChatGPTAPI | ChatGPTUnofficialProxyAPI
   }
 })()
 
+async function chatGPTReplayProcess(message: string, options: SendMessageOptions, onProgress: (partialResponse: any) => void) {
+  return api.sendMessage(message, {
+    ...options,
+    onProgress: (partialResponse) => {
+      onProgress?.(partialResponse)
+    },
+  })
+}
+
 async function chatReplyProcess(options: RequestOptions) {
   const { message, lastContext, process, systemMessage } = options
   try {
@@ -189,4 +198,4 @@ function currentModel(): ApiModel {
 
 export type { ChatContext, ChatMessage }
 
-export { chatReplyProcess, chatConfig, currentModel }
+export { chatReplyProcess, chatConfig, currentModel, chatGPTReplayProcess }

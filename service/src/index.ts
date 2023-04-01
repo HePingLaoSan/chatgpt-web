@@ -1,7 +1,7 @@
 import express from 'express'
 import type { RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
-import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
+import { chatConfig, chatGPTReplayProcess, chatReplyProcess, currentModel } from './chatgpt'
 import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
 import { isNotEmptyString } from './utils/is'
@@ -17,6 +17,26 @@ app.all('*', (_, res, next) => {
   res.header('Access-Control-Allow-Headers', 'authorization, Content-Type')
   res.header('Access-Control-Allow-Methods', '*')
   next()
+})
+
+router.post()
+
+router.post('/chat-original', [auth, limiter], async (req, res) => {
+  res.setHeader('Content-type', 'application/octet-stream')
+  try {
+    const { message, options = {}, onProgress } = req.body
+    chatGPTReplayProcess(
+      message,
+      options,
+      onProgress,
+    )
+  }
+  catch (error) {
+    res.write(JSON.stringify(error))
+  }
+  finally {
+    res.end()
+  }
 })
 
 router.post('/chat-process', [auth, limiter], async (req, res) => {
