@@ -1,6 +1,5 @@
 import express from 'express'
 import type { RequestProps } from './types'
-import type { ChatMessage } from './chatgpt'
 import { chatConfig, chatGPTReplayProcess, chatReplyProcess, currentModel } from './chatgpt'
 import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
@@ -19,47 +18,31 @@ app.all('*', (_, res, next) => {
   next()
 })
 
-router.post()
-
 router.post('/chat-original', [auth, limiter], async (req, res) => {
-  res.setHeader('Content-type', 'application/octet-stream')
   try {
     const { message, options = {}, onProgress } = req.body
-    chatGPTReplayProcess(
+    return await chatGPTReplayProcess(
       message,
       options,
       onProgress,
     )
   }
   catch (error) {
-    res.write(JSON.stringify(error))
-  }
-  finally {
-    res.end()
   }
 })
 
-router.post('/chat-process', [auth, limiter], async (req, res) => {
-  res.setHeader('Content-type', 'application/octet-stream')
-
+router.post('/chat-process', [auth, limiter], async (req) => {
   try {
     const { prompt, options = {}, systemMessage } = req.body as RequestProps
-    let firstChunk = true
-    await chatReplyProcess({
+    const response = await chatReplyProcess({
       message: prompt,
       lastContext: options,
-      process: (chat: ChatMessage) => {
-        res.write(firstChunk ? JSON.stringify(chat) : `\n${JSON.stringify(chat)}`)
-        firstChunk = false
-      },
+      process: () => {},
       systemMessage,
     })
+    return response
   }
   catch (error) {
-    res.write(JSON.stringify(error))
-  }
-  finally {
-    res.end()
   }
 })
 
